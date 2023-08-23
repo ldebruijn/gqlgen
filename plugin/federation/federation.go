@@ -361,10 +361,7 @@ func (f *federation) GenerateCode(data *codegen.Data) error {
 		existingImports := rewriter.ExistingImports(requiresFile)
 		for _, imp := range existingImports {
 			if imp.Alias == "" {
-				if _, ok := requiresImports[imp.ImportPath]; ok {
-					// import exists in both places, remove
-					delete(requiresImports, imp.ImportPath)
-				}
+				delete(requiresImports, imp.ImportPath)
 			}
 		}
 
