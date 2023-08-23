@@ -72,10 +72,11 @@ func (f Field) FieldDefinition(schemaType *ast.Definition, schema *ast.Schema) *
 // TypeReference looks up the type of a field.
 func (f Field) TypeReference(obj *codegen.Object, objects codegen.Objects) *codegen.Field {
 	var def *codegen.Field
-
 	for _, part := range f {
 		def = fieldByName(obj, part)
 		if def == nil {
+			println("obj", obj)
+			println("part", part)
 			panic("unable to find field " + f[0])
 		}
 		obj = objects.ByName(def.TypeReference.Definition.Name)
@@ -99,6 +100,8 @@ func (f Field) ToGoPrivate() string {
 
 	for i, field := range f {
 		if i == 0 {
+			// Strip any arguments from field
+			field = trimArgumentFromFieldName(field)
 			ret += templates.ToGoPrivate(field)
 			continue
 		}
@@ -147,7 +150,7 @@ func extractSubs(str string) (string, string, string) {
 	if start < 0 || end < 0 {
 		panic("invalid key fieldSet: " + str)
 	}
-	return strings.TrimSpace(str[:start]), strings.TrimSpace(str[start+1 : end]), strings.TrimSpace(str[end+1:])
+	return trimArgumentFromFieldName(strings.TrimSpace(str[:start])), strings.TrimSpace(str[start+1 : end]), strings.TrimSpace(str[end+1:])
 }
 
 // matchingBracketIndex returns the index of the closing bracket, assuming an open bracket at start.
@@ -173,9 +176,17 @@ func matchingBracketIndex(str string, start int) int {
 
 func fieldByName(obj *codegen.Object, name string) *codegen.Field {
 	for _, field := range obj.Fields {
+		// make sure field name is clear of arguments when getting field by name
+		field.Name = trimArgumentFromFieldName(field.Name)
 		if field.Name == name {
 			return field
 		}
 	}
 	return nil
+}
+
+// trimArgumentFromFieldName removes any arguments from the field name.
+// It removes any suffixes from the raw string, starting from the argument-open character `(`
+func trimArgumentFromFieldName(raw string) string {
+	return strings.Split(raw, "(")[0]
 }

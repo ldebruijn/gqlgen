@@ -1,6 +1,8 @@
 package fieldset
 
 import (
+	"github.com/99designs/gqlgen/codegen"
+	"github.com/vektah/gqlparser/v2/ast"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -73,4 +75,32 @@ func TestToGoPrivate(t *testing.T) {
 	require.Equal(t, Field{"foo"}.ToGoPrivate(), "foo")
 	require.Equal(t, Field{"foo", "bar"}.ToGoPrivate(), "fooBar")
 	require.Equal(t, Field{"bar", "id"}.ToGoPrivate(), "barID")
+}
+
+func TestHandlesRequiresFieldWithArgument(t *testing.T) {
+	obj := &codegen.Object{
+		Fields: []*codegen.Field{
+			{
+				FieldDefinition: &ast.FieldDefinition{
+					Name: "foo(limit:4) { bar }",
+				},
+				TypeReference:    nil,
+				GoFieldType:      0,
+				GoReceiverName:   "",
+				GoFieldName:      "",
+				IsResolver:       false,
+				Args:             nil,
+				MethodHasContext: false,
+				NoErr:            false,
+				VOkFunc:          false,
+				Object:           nil,
+				Default:          nil,
+				Stream:           false,
+				Directives:       nil,
+			},
+		},
+		Implements: nil,
+	}
+
+	require.NotNil(t, fieldByName(obj, "foo"))
 }

@@ -1,6 +1,8 @@
 package federation
 
 import (
+	"github.com/99designs/gqlgen/plugin/federation/fieldset"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/99designs/gqlgen/codegen"
@@ -205,4 +207,31 @@ func load(t *testing.T, name string) (*federation, *config.Config) {
 
 	require.NoError(t, cfg.Init())
 	return f, cfg
+}
+
+func TestHandlesRequiresArgumentCorrectlyIfNoSpace(t *testing.T) {
+	requiresFieldSet := fieldset.New("foo bar baz(limit:4)", nil)
+	assert.Equal(t, 3, len(requiresFieldSet))
+	assert.Equal(t, "Foo", requiresFieldSet[0].ToGo())
+	assert.Equal(t, "Bar", requiresFieldSet[1].ToGo())
+	assert.Equal(t, "Baz(limit:4)", requiresFieldSet[2].ToGo())
+}
+
+func TestHandlesArgumentGeneration(t *testing.T) {
+	e := &Entity{
+		Name:      "",
+		Def:       nil,
+		Resolvers: nil,
+		Requires:  nil,
+	}
+
+	raw := "foo bar baz(limit:4)"
+	requiresFieldSet := fieldset.New(raw, nil)
+	for _, field := range requiresFieldSet {
+
+		e.Requires = append(e.Requires, &Requires{
+			Name:  field.ToGoPrivate(),
+			Field: field,
+		})
+	}
 }
